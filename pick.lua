@@ -925,7 +925,7 @@ local function printFishLocationCounts()
 		if locationId then
 			local location = locations[locationId]
 			if location then
-				io_write(string_format("%s : %s\n", location.island, location.name))
+				io_write(string_format("%s : %s : %s\n", location.island, location.name, location.type))
 				local fish = location.fish
 				local maxFishNameLength = 0
 				for _, name in ipairs(fish) do
