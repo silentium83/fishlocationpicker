@@ -185,7 +185,7 @@ local locations = {
 		island = "Ossein Island",
 		fish = {
 			"Pacific Saury",
-			"Spearfish Squid",
+			"Spear Squid",
 			"Red King Crab",
 			"Alaska Pollack",
 			"Yellowtail",
@@ -329,7 +329,7 @@ local locations = {
 		island = "Titan Island",
 		fish = {
 			"Pacific Saury",
-			"Spearfish Squid",
+			"Spear Squid",
 			"Snow Crab",
 			"Pacific Cod",
 			"Kronosaurus",
@@ -445,7 +445,7 @@ local locations = {
 		island = "The Isle of Envy",
 		fish = {
 			"Japanese Whiting",
-			"Spearfish Squid",
+			"Spear Squid",
 			"Amberjack",
 			"Splendid Alfonsino",
 			"Coelacanth",
@@ -632,7 +632,7 @@ local fishes = {
 	["Lionfish"] = { colors = { ["pp"] = 1, ["pk"] = 1, ["bl"] = 1, ["lg"] = 1 }, type = "Coastal" },
 	["American Bullfrog"] = { colors = { ["bk"] = 1, ["br"] = 1, ["rd"] = 1 }, type = "Stillwater" },
 	["Black Rabbitfish"] = { colors = { ["br"] = 1, ["pp"] = 1, ["rd"] = 1 }, type = "Coastal" },
-	["Spearfish Squid"] = { colors = { ["wt"] = 1, ["pp"] = 1, ["lg"] = 1, ["rd"] = 1 }, type = "Deep Sea" },
+	["Spear Squid"] = { colors = { ["wt"] = 1, ["pp"] = 1, ["lg"] = 1, ["rd"] = 1 }, type = "Deep Sea" },
 	["Pennant Coralfish"] = { colors = { ["bk"] = 1, ["wt"] = 1, ["br"] = 1, ["bl"] = 1, ["gr"] = 1 }, type = "Coastal" },
 	["Convict Tang"] = { colors = { ["bk"] = 1, ["wt"] = 1, ["bl"] = 1, ["yl"] = 1 }, type = "Coastal" },
 	["Yellow Perch"] = { colors = { ["bk"] = 1, ["yl"] = 1, ["rd"] = 1 }, type = "Stillwater" },

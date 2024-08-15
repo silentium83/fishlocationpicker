@@ -29,7 +29,7 @@ return {
 	["Lionfish"] = rankings.none,
 	["American Bullfrog"] = rankings.none,
 	["Black Rabbitfish"] = rankings.none,
-	["Spearfish Squid"] = rankings.none,
+	["Spear Squid"] = rankings.none,
 	["Pennant Coralfish"] = rankings.none,
 	["Convict Tang"] = rankings.none,
 	["Yellow Perch"] = rankings.none,
