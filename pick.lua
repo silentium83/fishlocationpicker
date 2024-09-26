@@ -796,6 +796,7 @@ local function filterRares()
 		local formatString = table.concat{"%2d : %-", maxWidthIsland, "s : %-", maxWidthLocation, "s : %s\n"}
 		local io, string = io, string
 		local io_write, string_format = io.write, string.format
+		io_write("List of rare fish:\n")
 		for i, v in ipairs(rareFishes) do
 			io_write(string_format(formatString, i, v.island, v.location.name, v.fish))
 		end
@@ -887,6 +888,16 @@ local function calculateLocationScores(playerLures)
 	end
 end
 
+local function discardUselessLocations()
+	local newLocations = {}
+	for _, location in ipairs(locations) do
+		if location.score > 0 then
+			newLocations[#newLocations+1] = location
+		end
+	end
+	locations = newLocations
+end
+
 local function compareLocationScores(i, j)
 	assert(i.score, "location " .. i.name .. " has no score!")
 	assert(j.score, "location " .. j.name .. " has no score!")
@@ -898,18 +909,21 @@ local function sortLocations()
 end
 
 local function printTopLocations()
-	local math_max = math.max
+	local math = math
+	local math_max, table_concat = math.max, table.concat
+	local printLocationsCount = math.min(#locations, 10)
 	local maxWidthIsland, maxWidthLocation,maxWidthType = 0, 0, 0
-	for i = 1, 10, 1 do
+	for i = 1, printLocationsCount, 1 do
 		local location = locations[i]
 		maxWidthIsland = math_max(maxWidthIsland, #location.island)
 		maxWidthLocation = math_max(maxWidthLocation, #location.name)
 		maxWidthType = math_max(maxWidthType, #location.type)
 	end
-	local formatString = table.concat{"%2d : %-", maxWidthIsland,
+	local formatString = table_concat{"%2d : %-", maxWidthIsland,
 		"s : %-", maxWidthLocation, "s : %-", maxWidthType, "s : %f\n"}
 	local io_write, string_format = io.write, string.format
-	for i = 1, 10, 1 do
+	io_write(table_concat{"Found ", #locations, " eligible locations:\n"})
+	for i = 1, printLocationsCount, 1 do
 		local location = locations[i]
 		io_write(string_format(formatString, i, location.island, location.name, location.type, location.score))
 	end
@@ -947,6 +961,7 @@ local function main()
 	calculateFishScoreWeights()
 	local playerLures = getPlayerLures()
 	calculateLocationScores(playerLures)
+	discardUselessLocations()
 	sortLocations()
 	printTopLocations()
 	printFishLocationCounts()
