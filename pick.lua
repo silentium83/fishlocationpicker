@@ -768,6 +768,30 @@ local fishes = {
 	["Jellyfish"] = { colors = { ["bk"] = 1, ["wt"] = 1, ["br"] = 1, ["pp"] = 1, ["pk"] = 1, ["lb"] = 1, ["bl"] = 1, ["gr"] = 1, ["lg"] = 1, ["yl"] = 1, ["or"] = 1, ["rd"] = 1 }, type = "Junk" },
 }
 
+local function discardGoldLocations()
+	local ipairs = ipairs
+	local rankings_a_plus = rankings.a_plus
+	local j, n = 1, #locations
+	for i = 1, n do
+		local location, keep = locations[i], false
+		for _, fish in ipairs(location.fish) do
+			if progress[fish] < rankings_a_plus then
+				keep = true
+				break
+			end
+		end
+		if keep then
+			if i ~= j then
+				locations[j] = location
+				locations[i] = nil
+			end
+			j = j + 1
+		else
+			locations[i] = nil
+		end
+	end
+end
+
 local function locationTypes()
 	for _, location in ipairs(locations) do
 		location.type = fishes[location.fish[1]].type
@@ -796,7 +820,7 @@ local function filterRares()
 		local formatString = table.concat{"%2d : %-", maxWidthIsland, "s : %-", maxWidthLocation, "s : %s\n"}
 		local io, string = io, string
 		local io_write, string_format = io.write, string.format
-		io_write("List of rare fish:\n")
+		io_write("List of relevant rare fish:\n")
 		for i, v in ipairs(rareFishes) do
 			io_write(string_format(formatString, i, v.island, v.location.name, v.fish))
 		end
@@ -963,6 +987,7 @@ local function printFishLocationCounts()
 end
 
 local function main()
+	discardGoldLocations()
 	locationTypes()
 	filterRares()
 	calculateFishScoreWeights()
