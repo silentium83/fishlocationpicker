@@ -889,13 +889,20 @@ local function calculateLocationScores(playerLures)
 end
 
 local function discardUselessLocations()
-	local newLocations = {}
-	for _, location in ipairs(locations) do
+	local locations = locations
+	local j, n = 1, #locations
+	for i = 1, n do
+		local location = locations[i]
 		if location.score > 0 then
-			newLocations[#newLocations+1] = location
+			if i ~= j then
+				locations[j] = location
+				locations[i] = nil
+			end
+			j = j + 1
+		else
+			locations[i] = nil
 		end
 	end
-	locations = newLocations
 end
 
 local function compareLocationScores(i, j)
@@ -913,7 +920,7 @@ local function printTopLocations()
 	local math_max, table_concat = math.max, table.concat
 	local printLocationsCount = math.min(#locations, 10)
 	local maxWidthIsland, maxWidthLocation,maxWidthType = 0, 0, 0
-	for i = 1, printLocationsCount, 1 do
+	for i = 1, printLocationsCount do
 		local location = locations[i]
 		maxWidthIsland = math_max(maxWidthIsland, #location.island)
 		maxWidthLocation = math_max(maxWidthLocation, #location.name)
@@ -923,7 +930,7 @@ local function printTopLocations()
 		"s : %-", maxWidthLocation, "s : %-", maxWidthType, "s : %f\n"}
 	local io_write, string_format = io.write, string.format
 	io_write(table_concat{"Found ", #locations, " eligible locations:\n"})
-	for i = 1, printLocationsCount, 1 do
+	for i = 1, printLocationsCount do
 		local location = locations[i]
 		io_write(string_format(formatString, i, location.island, location.name, location.type, location.score))
 	end
