@@ -2,6 +2,7 @@
 -- [[
 if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
 	DEBUG = true
+	DEBUG_PLAYER_MODE = "1"
 	-- DEBUG_RARE_FISH_STRING = "1 2 3 4 5 6 7 8 9 10 11 12"
 	-- DEBUG_RARE_FISH_STRING = "1 3 5 7 9 11"
 	DEBUG_RARE_FISH_STRING = ""
@@ -9,8 +10,14 @@ if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
 end
 --]]
 
+local playerModes = {
+	"medals",
+	"top 10",
+}
+
 local rankings = require("rankings")
-local progress = require("progress")
+local progressMedals = require("progress_medals")
+local progressTop10 = require("progress_top10")
 
 -- medal ranking requirements
 local medals = {
@@ -768,6 +775,23 @@ local fishes = {
 	["Jellyfish"] = { colors = { ["bk"] = 1, ["wt"] = 1, ["br"] = 1, ["pp"] = 1, ["pk"] = 1, ["lb"] = 1, ["bl"] = 1, ["gr"] = 1, ["lg"] = 1, ["yl"] = 1, ["or"] = 1, ["rd"] = 1 }, type = "Junk" },
 }
 
+local function getPlayerMode()
+	local io = io
+	local io_read, io_write, tonumber = io.read, io.write, tonumber
+	io_write([[
+Please enter mode:
+1 Medals
+2 Top 10
+]])
+	while true do
+		local playerInput = tonumber(DEBUG_PLAYER_MODE or io_read(), 10)
+		if playerInput and playerModes[playerInput] then
+			return playerInput
+		end
+		io_write("Please enter a valid number: ")
+	end
+end
+
 local function discardGoldLocations()
 	local ipairs = ipairs
 	local rankings_a_plus = rankings.a_plus
@@ -775,7 +799,7 @@ local function discardGoldLocations()
 	for i = 1, n do
 		local location, keep = locations[i], false
 		for _, fish in ipairs(location.fish) do
-			if progress[fish] < rankings_a_plus then
+			if progressMedals[fish] < rankings_a_plus then
 				keep = true
 				break
 			end
@@ -809,7 +833,12 @@ local function filterRares()
 					local island = location.island
 					maxWidthIsland = math_max(maxWidthIsland, #island)
 					maxWidthLocation = math_max(maxWidthLocation, #location.name)
-					rareFishes[#rareFishes+1] = { island = island, location = location, fish = fish, fishIndex = fishIndex }
+					rareFishes[#rareFishes + 1] = {
+						fish = fish,
+						fishIndex = fishIndex,
+						island = island,
+						location = location,
+					}
 				end
 			end
 		end
@@ -817,7 +846,7 @@ local function filterRares()
 	if #rareFishes > 0 then
 		-- print list as formatted table
 		local table = table
-		local formatString = table.concat{"%2d : %-", maxWidthIsland, "s : %-", maxWidthLocation, "s : %s\n"}
+		local formatString = table.concat { "%2d : %-", maxWidthIsland, "s : %-", maxWidthLocation, "s : %s\n" }
 		local io, string = io, string
 		local io_write, string_format = io.write, string.format
 		io_write("List of relevant rare fish:\n")
@@ -838,7 +867,7 @@ local function filterRares()
 		for i, v in ipairs(rareFishes) do
 			if not availableFishes[i] then
 				-- this might break if a location had multiple rare fish, but there is no such location in the game
-				if DEBUG then print(table.concat{"removing fish #", v.fishIndex, " from ", v.location.name}) end
+				if DEBUG then print(table.concat { "removing fish #", v.fishIndex, " from ", v.location.name }) end
 				table_remove(v.location.fish, v.fishIndex)
 			end
 		end
@@ -857,7 +886,7 @@ local function calculateFishScoreWeights()
 		local scoreWeight = (fish.rare and scoreFactors.rare or 1) / (fish.locations or 1)
 		local fish_colors = fish.colors
 		for color, value in pairs(fish_colors) do
-			--[[ modification of existing fields is allowed during traversal, see 
+			--[[ modification of existing fields is allowed during traversal, see
 				https://www.lua.org/manual/5.4/manual.html#pdf-next ]]
 			fish_colors[color] = value * scoreWeight
 		end
@@ -883,7 +912,7 @@ Please enter your lures using the following codes, separated by spaces:
 	return playerLures
 end
 
-local function calculateLocationScores(playerLures)
+local function calculateLocationScoresMedals(playerLures)
 	local ipairs, pairs = ipairs, pairs
 	for _, location in ipairs(locations) do
 		local locationScore = 0
@@ -897,7 +926,7 @@ local function calculateLocationScores(playerLures)
 					local fishWeight = fish.colors[lure]
 					if fishWeight then
 						fishCount = fishCount + 1
-						if progress[fishName] < ranking then
+						if progressMedals[fishName] < ranking then
 							fishScore = fishScore + fishWeight
 						end
 					end
@@ -907,6 +936,31 @@ local function calculateLocationScores(playerLures)
 				end
 			end
 			locationScore = locationScore + medalScore * scoreFactors[ranking]
+		end
+		location.score = locationScore
+	end
+end
+
+local function calculateLocationScoresTop10(playerLures)
+	local ipairs, pairs = ipairs, pairs
+	for _, location in ipairs(locations) do
+		local locationScore = 0
+		for lure, lureCount in pairs(playerLures) do
+			local fishScore = 0
+			local fishCount = 0
+			for _, fishName in ipairs(location.fish) do
+				local fish = fishes[fishName]
+				local fishWeight = fish.colors[lure]
+				if fishWeight then
+					fishCount = fishCount + 1
+					if progressTop10[fishName] then
+						fishScore = fishScore + progressTop10[fishName] - 1
+					end
+				end
+			end
+			if fishCount > 0 then
+				locationScore = locationScore + lureCount * fishScore / fishCount
+			end
 		end
 		location.score = locationScore
 	end
@@ -943,17 +997,17 @@ local function printTopLocations()
 	local math = math
 	local math_max, table_concat = math.max, table.concat
 	local printLocationsCount = math.min(#locations, 10)
-	local maxWidthIsland, maxWidthLocation,maxWidthType = 0, 0, 0
+	local maxWidthIsland, maxWidthLocation, maxWidthType = 0, 0, 0
 	for i = 1, printLocationsCount do
 		local location = locations[i]
 		maxWidthIsland = math_max(maxWidthIsland, #location.island)
 		maxWidthLocation = math_max(maxWidthLocation, #location.name)
 		maxWidthType = math_max(maxWidthType, #location.type)
 	end
-	local formatString = table_concat{"%2d : %-", maxWidthIsland,
-		"s : %-", maxWidthLocation, "s : %-", maxWidthType, "s : %f\n"}
+	local formatString = table_concat { "%2d : %-", maxWidthIsland,
+		"s : %-", maxWidthLocation, "s : %-", maxWidthType, "s : %f\n" }
 	local io_write, string_format = io.write, string.format
-	io_write(table_concat{"Found ", #locations, " eligible locations:\n"})
+	io_write(table_concat { "Found ", #locations, " eligible locations:\n" })
 	for i = 1, printLocationsCount do
 		local location = locations[i]
 		io_write(string_format(formatString, i, location.island, location.name, location.type, location.score))
@@ -976,7 +1030,7 @@ local function printFishLocationCounts()
 				for _, name in ipairs(fish) do
 					maxFishNameLength = math_max(maxFishNameLength, #name)
 				end
-				local formatString = table_concat{"%d : %-", maxFishNameLength, "s : %d\n"}
+				local formatString = table_concat { "%d : %-", maxFishNameLength, "s : %d\n" }
 				for index, name in ipairs(fish) do
 					io_write(string_format(formatString, index, name, fishes[name].locations))
 				end
@@ -987,12 +1041,22 @@ local function printFishLocationCounts()
 end
 
 local function main()
-	discardGoldLocations()
+	local playerMode = getPlayerMode()
+	if playerModes[playerMode] == "medals" then
+		discardGoldLocations()
+	end
 	locationTypes()
 	filterRares()
 	calculateFishScoreWeights()
 	local playerLures = getPlayerLures()
-	calculateLocationScores(playerLures)
+	if playerModes[playerMode] == "medals" then
+		calculateLocationScoresMedals(playerLures)
+	elseif playerModes[playerMode] == "top 10" then
+		calculateLocationScoresTop10(playerLures)
+	else
+		io.write("Error: invalid player mode!\n")
+		return
+	end
 	discardUselessLocations()
 	sortLocations()
 	printTopLocations()

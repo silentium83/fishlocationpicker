@@ -40,4 +40,5 @@ luac.out
 *.hex
 
 .vscode
-progress.lua
+progress_medals.lua
+progress_top10.lua
