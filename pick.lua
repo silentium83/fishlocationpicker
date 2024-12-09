@@ -1014,7 +1014,7 @@ local function printTopLocations()
 	end
 end
 
-local function printFishLocationCounts()
+local function printFishLocationStats()
 	local io, math, string, table = io, math, string, table
 	local io_read, io_write, math_max = io.read, io.write, math.max
 	local string_format, table_concat = string.format, table.concat
@@ -1030,9 +1030,9 @@ local function printFishLocationCounts()
 				for _, name in ipairs(fish) do
 					maxFishNameLength = math_max(maxFishNameLength, #name)
 				end
-				local formatString = table_concat { "%d : %-", maxFishNameLength, "s : %d\n" }
+				local formatString = table_concat { "%d : %-", maxFishNameLength, "s : %d : %d\n" }
 				for index, name in ipairs(fish) do
-					io_write(string_format(formatString, index, name, fishes[name].locations))
+					io_write(string_format(formatString, index, name, fishes[name].locations, progressTop10[name]))
 				end
 			end
 			io_write("\n")
@@ -1060,7 +1060,7 @@ local function main()
 	discardUselessLocations()
 	sortLocations()
 	printTopLocations()
-	printFishLocationCounts()
+	printFishLocationStats()
 end
 
 main()
