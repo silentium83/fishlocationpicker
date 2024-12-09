@@ -954,7 +954,7 @@ local function calculateLocationScoresTop10(playerLures)
 				if fishWeight then
 					fishCount = fishCount + 1
 					if progressTop10[fishName] then
-						fishScore = fishScore + progressTop10[fishName] - 1
+						fishScore = fishScore + fishWeight * (progressTop10[fishName] - 1)
 					end
 				end
 			end
